@@ -1,7 +1,7 @@
 {
   "name": "thriftsathi-backend",
   "version": "1.0.0",
-  "description": "ThriftSathi – Nepal's second-hand marketplace API",
+  "description": "ThriftSathi – Nepal's second-hand marketplace",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
