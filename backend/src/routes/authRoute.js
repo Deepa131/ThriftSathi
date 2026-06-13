@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const { body } = require("express-validator");
-const { register, login, getMe } = require("../controllers/authController");
+const { register, login, getMe } = require("../controller/authController");
 const { protect } = require("../middleware/auth");
 
 router.post("/register", [

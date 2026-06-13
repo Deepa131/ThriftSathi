@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const ctrl = require("../controllers/listingController");
+const ctrl = require("../controller/listingController");
 const { protect, optionalAuth } = require("../middleware/auth");
 const upload = require("../middleware/upload");
 

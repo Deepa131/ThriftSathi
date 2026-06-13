@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const ctrl = require("../controllers/orderController");
+const ctrl = require("../controller/orderController");
 const { protect } = require("../middleware/auth");
 
 router.use(protect); // all order routes require login

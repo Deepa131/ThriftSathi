@@ -15,11 +15,11 @@ const setupSocket = require("./socket/index");
 const { errorHandler } = require("./middleware/error");
 
 // Route imports
-const authRoutes    = require("./routes/auth");
-const listingRoutes = require("./routes/listings");
-const orderRoutes   = require("./routes/orders");
-const userRoutes    = require("./routes/users");
-const { msgRouter, revRouter, repRouter, offerRouter } = require("./routes/other");
+const authRoutes    = require("./routes/authRoute");
+const listingRoutes = require("./routes/listingRoute");
+const orderRoutes   = require("./routes/orderRoute");
+const userRoutes    = require("./routes/userRoute");
+const { msgRouter, revRouter, repRouter, offerRouter } = require("./routes/otherRoute");
 
 // Connect to MongoDB
 connectDB();
