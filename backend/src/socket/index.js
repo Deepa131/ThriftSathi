@@ -52,9 +52,15 @@ function setupSocket(io) {
           structuredData: structuredData || null,
         });
 
+        // Increment the recipient's unread counter so the navbar badge
+        // (and conversation list) reflect real unread messages instead
+        // of always showing 0 — these fields existed on the schema but
+        // were never actually being updated anywhere.
+        const isBuyerSending = String(socket.user._id) === String(convo.buyer);
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: body.substring(0, 80),
           lastMessageAt: new Date(),
+          $inc: isBuyerSending ? { unreadSeller: 1 } : { unreadBuyer: 1 },
         });
 
         const populated = {

@@ -6,7 +6,17 @@ const userSchema = new mongoose.Schema(
     fullName: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6, select: false },
-    phone: { type: String, default: "" },
+    phone: {
+      type: String,
+      default: "",
+      validate: {
+        // Nepali mobile numbers are 10 digits starting with 96, 97, or 98
+        // (covers NTC, Ncell, and Smart Cell ranges) — plain "any 10
+        // digits" was letting through numbers no Nepali carrier issues.
+        validator: (v) => !v || /^\+977(9[678]\d{8})$/.test(v),
+        message: "Enter a valid Nepali mobile number (starts with 98, 97, or 96).",
+      },
+    },
     phoneVerified: { type: Boolean, default: false },
     city: { type: String, default: "Kathmandu" },
     avatarUrl: { type: String, default: "" },
@@ -19,6 +29,13 @@ const userSchema = new mongoose.Schema(
     responseRate: { type: Number, default: 0 },         // US-03
     avgReplyMinutes: { type: Number, default: 0 },       // US-03
     trustScore: { type: Number, default: 0 },            // US-23
+    // Seller's digital wallet QR codes, shown to buyers on the payment
+    // page when they pick eSewa/Khalti so they have something real to
+    // scan and pay, instead of the app just declaring "payment received".
+    paymentQR: {
+      esewa:  { type: String, default: "" },
+      khalti: { type: String, default: "" },
+    },
     accountabilityScore: { type: Number, default: 100 }, // US-44
     profileCompleteness: { type: Number, default: 0 },   // US-09
     isActive: { type: Boolean, default: true },

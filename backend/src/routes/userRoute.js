@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const ctrl = require("../controller/userController");
 const { protect, optionalAuth } = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
 // Public
 router.get("/:id", optionalAuth, ctrl.getProfile);
@@ -8,6 +9,7 @@ router.get("/:id", optionalAuth, ctrl.getProfile);
 // Protected
 router.use(protect);
 router.patch("/me/profile",                ctrl.updateProfile);
+router.post("/me/payment-qr",              upload.single("qr"), ctrl.uploadPaymentQR);
 router.get("/me/dashboard",               ctrl.getDashboard);
 router.get("/me/saved",                   ctrl.getSavedItems);
 router.post("/me/saved",                  ctrl.saveItem);

@@ -16,6 +16,25 @@ exports.getConversations = async (req, res) => {
   res.json({ success: true, conversations });
 };
 
+// GET /api/messages/unread-count
+// Total unread message count for the navbar badge. This is driven by the
+// per-conversation unreadBuyer/unreadSeller counters, which are already
+// reset to 0 the moment the user opens that conversation (see getMessages
+// below) — so the badge disappears on its own once the messages are seen,
+// instead of staying stuck at a stale number.
+exports.getUnreadCount = async (req, res) => {
+  const conversations = await Conversation.find({
+    $or: [{ buyer: req.user._id }, { seller: req.user._id }],
+  }).select("buyer unreadBuyer unreadSeller");
+
+  const count = conversations.reduce((sum, c) => {
+    const isBuyer = String(c.buyer) === String(req.user._id);
+    return sum + (isBuyer ? c.unreadBuyer : c.unreadSeller);
+  }, 0);
+
+  res.json({ success: true, count });
+};
+
 // POST /api/messages/conversations
 // Start or retrieve a conversation for a listing
 exports.startConversation = async (req, res) => {
@@ -70,6 +89,10 @@ exports.getMessages = async (req, res) => {
     { isRead: true }
   );
 
+  // Reset this user's unread counter on the conversation too
+  const isBuyerReading = String(req.user._id) === String(convo.buyer);
+  await Conversation.findByIdAndUpdate(req.params.conversationId, isBuyerReading ? { unreadBuyer: 0 } : { unreadSeller: 0 });
+
   res.json({ success: true, messages });
 };
 
@@ -92,9 +115,11 @@ exports.sendMessage = async (req, res) => {
     structuredData: structuredData || null,
   });
 
+  const isBuyerSending = String(req.user._id) === String(convo.buyer);
   await Conversation.findByIdAndUpdate(req.params.conversationId, {
     lastMessage: body.substring(0, 80),
     lastMessageAt: new Date(),
+    $inc: isBuyerSending ? { unreadSeller: 1 } : { unreadBuyer: 1 },
   });
 
   const recipientId = String(req.user._id) === String(convo.buyer)

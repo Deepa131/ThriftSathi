@@ -35,7 +35,12 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed"],
+      // "pending"               – cash on delivery/meetup, nothing to confirm yet
+      // "awaiting_confirmation" – buyer paid via eSewa/Khalti QR and says they've
+      //                           paid; seller hasn't confirmed receiving it yet
+      // "paid"                  – seller confirmed the money actually arrived
+      // "failed"                – reserved for future payment-gateway integration
+      enum: ["pending", "awaiting_confirmation", "paid", "failed"],
       default: "pending",
     },
     status: {

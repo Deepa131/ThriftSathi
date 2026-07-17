@@ -32,6 +32,7 @@ export default function App() {
 
         {/* Protected – must be logged in */}
         <Route path="/sell"           element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
+        <Route path="/sell/edit/:id"  element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
         <Route path="/checkout/:id"   element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
         <Route path="/payment/:id"    element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         <Route path="/messages"       element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />

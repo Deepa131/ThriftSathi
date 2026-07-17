@@ -8,11 +8,17 @@ exports.getProfile = async (req, res) => {
   const user = await User.findById(req.params.id).select("-password -blockedUsers");
   if (!user) return res.status(404).json({ success: false, message: "User not found." });
 
-  const listings = await Listing.find({ seller: user._id, status: "active" }).sort({ createdAt: -1 });
-  const reviews = await Review.find({ seller: user._id })
-    .populate("reviewer", "fullName avatarUrl")
-    .sort({ createdAt: -1 })
-    .limit(10);
+  // Active listings + sold listings (sold items shown so buyers can see the
+  // seller's track record) are fetched separately so the frontend can
+  // render them in two distinct sections.
+  const [listings, soldListings, reviews] = await Promise.all([
+    Listing.find({ seller: user._id, status: "active" }).sort({ createdAt: -1 }),
+    Listing.find({ seller: user._id, status: "sold" }).sort({ updatedAt: -1 }),
+    Review.find({ seller: user._id })
+      .populate("reviewer", "fullName avatarUrl")
+      .sort({ createdAt: -1 })
+      .limit(10),
+  ]);
 
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
@@ -24,7 +30,7 @@ exports.getProfile = async (req, res) => {
     isFollowing = user.followers.some((f) => String(f) === String(req.user._id));
   }
 
-  res.json({ success: true, user, listings, reviews, avgRating, reviewCount: reviews.length, isFollowing });
+  res.json({ success: true, user, listings, soldListings, reviews, avgRating, reviewCount: reviews.length, isFollowing });
 };
 
 // PATCH /api/users/me  – update own profile (US-37, US-09)
@@ -34,6 +40,28 @@ exports.updateProfile = async (req, res) => {
   allowed.forEach((f) => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
 
   const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
+  res.json({ success: true, user });
+};
+
+// POST /api/users/me/payment-qr
+// Seller uploads a QR code image for eSewa or Khalti. `method` in the body
+// says which wallet it's for; the file itself comes through multer as
+// req.file (field name "qr"), same upload middleware listings use.
+exports.uploadPaymentQR = async (req, res) => {
+  const { method } = req.body;
+  if (!["esewa", "khalti"].includes(method))
+    return res.status(400).json({ success: false, message: "Method must be 'esewa' or 'khalti'." });
+
+  if (!req.file)
+    return res.status(400).json({ success: false, message: "No QR image uploaded." });
+
+  const url = `/uploads/${req.file.filename}`;
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    { [`paymentQR.${method}`]: url },
+    { new: true }
+  ).select("-password");
+
   res.json({ success: true, user });
 };
 

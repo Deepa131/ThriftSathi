@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
     token,
     user: {
       _id: user._id, fullName: user.fullName, email: user.email,
-      city: user.city, avatarUrl: user.avatarUrl, phoneVerified: user.phoneVerified,
+      phone: user.phone, city: user.city, avatarUrl: user.avatarUrl, phoneVerified: user.phoneVerified,
     },
   });
 };
@@ -44,7 +44,7 @@ exports.login = async (req, res) => {
     token,
     user: {
       _id: user._id, fullName: user.fullName, email: user.email,
-      city: user.city, avatarUrl: user.avatarUrl, phoneVerified: user.phoneVerified,
+      phone: user.phone, city: user.city, avatarUrl: user.avatarUrl, phoneVerified: user.phoneVerified,
     },
   });
 };

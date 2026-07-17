@@ -84,7 +84,7 @@ exports.getSoldPrices = async (req, res) => {
 // GET /api/listings/:id
 exports.getListingById = async (req, res) => {
   const listing = await Listing.findById(req.params.id)
-    .populate("seller", "fullName avatarUrl phoneVerified city responseRate avgReplyMinutes trustScore accountabilityScore followers");
+    .populate("seller", "fullName avatarUrl phoneVerified city responseRate avgReplyMinutes trustScore accountabilityScore followers paymentQR");
 
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found." });
 

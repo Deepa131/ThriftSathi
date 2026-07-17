@@ -9,6 +9,7 @@ router.get("/",                ctrl.getMyOrders);
 router.get("/selling",         ctrl.getSellingOrders);
 router.get("/:id",             ctrl.getOrderById);
 router.patch("/:id/status",    ctrl.updateOrderStatus);
+router.patch("/:id/confirm-payment", ctrl.confirmPayment);
 router.post("/:id/dispute",    ctrl.raiseDispute);
 
 module.exports = router;

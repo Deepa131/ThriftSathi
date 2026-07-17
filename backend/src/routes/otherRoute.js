@@ -9,6 +9,11 @@ const msgRouter = express.Router();
 msgRouter.use(protect);
 msgRouter.get("/conversations", messageCtrl.getConversations);
 msgRouter.post("/conversations", messageCtrl.startConversation);
+// IMPORTANT: this must stay above the "/:conversationId" route below.
+// Express matches routes top-to-bottom, so if "/:conversationId" were
+// declared first, a request to "/unread-count" would be swallowed by it
+// (treating "unread-count" as a conversation id) and crash.
+msgRouter.get("/unread-count", messageCtrl.getUnreadCount);
 msgRouter.get("/:conversationId", messageCtrl.getMessages);
 msgRouter.post("/:conversationId", messageCtrl.sendMessage);
 

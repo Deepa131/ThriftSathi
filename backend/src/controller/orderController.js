@@ -52,9 +52,19 @@ exports.createOrder = async (req, res) => {
     deliveryAddress: deliveryAddress || "",
     meetupLocation: meetupLocation || "",
     paymentMethod,
-    paymentStatus: paymentMethod === "cod" ? "pending" : "paid",
+    // Digital wallet payments (eSewa/Khalti) happen outside the app —
+    // the buyer scans the seller's QR and pays in their own wallet app.
+    // We have no way to verify that money actually moved, so the order
+    // starts "awaiting_confirmation" until the seller says they received
+    // it. COD has nothing to confirm upfront, so it just stays "pending".
+    paymentStatus: paymentMethod === "cod" ? "pending" : "awaiting_confirmation",
     status: "confirmed",
-    timeline: [{ step: "Order confirmed", note: "Seller has been notified." }],
+    timeline: [{
+      step: "Order placed",
+      note: paymentMethod === "cod"
+        ? "Seller has been notified. Pay cash on delivery/meetup."
+        : "Seller has been notified and asked to confirm your payment.",
+    }],
   });
 
   // Mark listing as sold
@@ -135,6 +145,40 @@ exports.updateOrderStatus = async (req, res) => {
   });
 
   res.json({ success: true, order });
+};
+
+// PATCH /api/orders/:id/confirm-payment
+// Seller-only: confirms money from an eSewa/Khalti QR payment actually
+// arrived. This is what flips paymentStatus from "awaiting_confirmation"
+// to "paid" — the buyer tapping "I've paid" is not enough on its own.
+exports.confirmPayment = async (req, res) => {
+  const order = await Order.findOne({ _id: req.params.id, seller: req.user._id });
+  if (!order) return res.status(404).json({ success: false, message: "Order not found." });
+
+  if (order.paymentMethod === "cod")
+    return res.status(400).json({ success: false, message: "Cash on delivery orders don't need payment confirmation." });
+
+  if (order.paymentStatus === "paid")
+    return res.status(400).json({ success: false, message: "Payment was already confirmed." });
+
+  order.paymentStatus = "paid";
+  order.timeline.push({ step: "Payment confirmed", note: "Seller confirmed the payment was received." });
+  await order.save();
+
+  await Notification.create({
+    user: order.buyer,
+    type: "order_update",
+    title: "Payment confirmed!",
+    body: `The seller confirmed your ${order.paymentMethod.toUpperCase()} payment for order #${order.orderNumber}.`,
+    meta: { orderId: order._id },
+  });
+
+  const populated = await Order.findById(order._id)
+    .populate("listing", "title imageUrls category condition")
+    .populate("buyer", "fullName email phone")
+    .populate("seller", "fullName email phone");
+
+  res.json({ success: true, order: populated });
 };
 
 // POST /api/orders/:id/dispute  (US-21)
