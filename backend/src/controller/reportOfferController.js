@@ -1,9 +1,6 @@
-const { Report, Offer, Notification } = require("../models/index");
-const Listing = require("../models/Listing");
+const { Report, Offer, Notification } = require("../model/index");
+const Listing = require("../model/listing");
 
-// ── REPORT CONTROLLER ─────────────────────────────────────────────────────────
-
-// POST /api/reports
 exports.createReport = async (req, res) => {
   const { listingId, reason, note } = req.body;
 
@@ -20,7 +17,6 @@ exports.createReport = async (req, res) => {
   res.status(201).json({ success: true, report });
 };
 
-// GET /api/reports/mine  – buyer tracks their own reports (US-20)
 exports.getMyReports = async (req, res) => {
   const reports = await Report.find({ reporter: req.user._id })
     .populate("listing", "title imageUrls")
@@ -28,9 +24,6 @@ exports.getMyReports = async (req, res) => {
   res.json({ success: true, reports });
 };
 
-// ── OFFER CONTROLLER (US-15) ──────────────────────────────────────────────────
-
-// POST /api/offers
 exports.createOffer = async (req, res) => {
   const { listingId, amount } = req.body;
 
@@ -41,7 +34,6 @@ exports.createOffer = async (req, res) => {
   if (String(listing.seller) === String(req.user._id))
     return res.status(400).json({ success: false, message: "Cannot offer on your own listing." });
 
-  // Check active offer count (max 3 rounds)
   const existingOffers = await Offer.find({ listing: listingId, buyer: req.user._id });
   if (existingOffers.length >= 3)
     return res.status(400).json({ success: false, message: "Maximum 3 offer rounds reached." });
@@ -66,9 +58,8 @@ exports.createOffer = async (req, res) => {
   res.status(201).json({ success: true, offer });
 };
 
-// PATCH /api/offers/:id  – accept / decline / counter
 exports.respondToOffer = async (req, res) => {
-  const { action, counterAmount } = req.body; // action: accept|decline|counter
+  const { action, counterAmount } = req.body; 
 
   const offer = await Offer.findById(req.params.id).populate("listing");
   if (!offer) return res.status(404).json({ success: false, message: "Offer not found." });
@@ -80,7 +71,6 @@ exports.respondToOffer = async (req, res) => {
   else if (action === "counter") {
     if (!counterAmount) return res.status(400).json({ success: false, message: "Counter amount required." });
     offer.status = "countered";
-    // Create counter offer
     await Offer.create({
       listing: offer.listing._id,
       buyer: offer.buyer,
@@ -104,7 +94,6 @@ exports.respondToOffer = async (req, res) => {
   res.json({ success: true, offer });
 };
 
-// GET /api/offers/listing/:listingId
 exports.getOffersForListing = async (req, res) => {
   const listing = await Listing.findOne({ _id: req.params.listingId, seller: req.user._id });
   if (!listing) return res.status(403).json({ success: false, message: "Not authorised." });

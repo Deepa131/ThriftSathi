@@ -1,11 +1,10 @@
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
-const User = require("../models/User");
+const User = require("../model/user");
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "7d" });
 
-// POST /api/auth/register
 exports.register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(422).json({ success: false, errors: errors.array() });
@@ -28,7 +27,6 @@ exports.register = async (req, res) => {
   });
 };
 
-// POST /api/auth/login
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -49,7 +47,6 @@ exports.login = async (req, res) => {
   });
 };
 
-// GET /api/auth/me
 exports.getMe = async (req, res) => {
   res.json({ success: true, user: req.user });
 };

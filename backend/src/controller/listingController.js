@@ -1,7 +1,6 @@
-const Listing = require("../models/Listing");
-const { PriceAlert, Notification, SavedItem } = require("../models/index");
+const Listing = require("../model/listing");
+const { PriceAlert, Notification, SavedItem } = require("../model/index");
 
-// GET /api/listings  – browse with filters (US-01, US-05, US-24, US-31)
 exports.getListings = async (req, res) => {
   const {
     q, category, condition, city, minPrice, maxPrice,
@@ -37,7 +36,6 @@ exports.getListings = async (req, res) => {
     .limit(Number(limit));
 
   if (verifiedOnly === "true") {
-    // Filter after populate (or use aggregate for better perf in production)
     const listings = await query;
     const filtered = listings.filter((l) => l.seller?.phoneVerified);
     return res.json({ success: true, listings: filtered, total });
@@ -47,8 +45,6 @@ exports.getListings = async (req, res) => {
   res.json({ success: true, listings, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
 };
 
-// GET /api/listings/recent – home page section (US-30)
-// ONLY returns listings users have actually created — no dummy data
 exports.getRecentListings = async (req, res) => {
   const { category, limit = 8 } = req.query;
   const filter = { status: "active" };
@@ -62,7 +58,6 @@ exports.getRecentListings = async (req, res) => {
   res.json({ success: true, listings });
 };
 
-// GET /api/listings/sold-prices  – market data (US-17)
 exports.getSoldPrices = async (req, res) => {
   const { category } = req.query;
   const filter = { status: "sold" };
@@ -81,17 +76,14 @@ exports.getSoldPrices = async (req, res) => {
   res.json({ success: true, soldItems: sold, medianPrice: median });
 };
 
-// GET /api/listings/:id
 exports.getListingById = async (req, res) => {
   const listing = await Listing.findById(req.params.id)
     .populate("seller", "fullName avatarUrl phoneVerified city responseRate avgReplyMinutes trustScore accountabilityScore followers paymentQR");
 
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found." });
 
-  // Increment view count (fire-and-forget)
   Listing.findByIdAndUpdate(req.params.id, { $inc: { viewCount: 1 } }).exec();
 
-  // Check if current user has saved this listing
   let isSaved = false;
   if (req.user) {
     const saved = await SavedItem.findOne({ user: req.user._id, listing: listing._id });
@@ -101,7 +93,6 @@ exports.getListingById = async (req, res) => {
   res.json({ success: true, listing, isSaved });
 };
 
-// POST /api/listings  – create (US-12, US-42, US-43, US-45, US-48)
 exports.createListing = async (req, res) => {
   const {
     title, description, category, condition, price, originalPrice,
@@ -126,13 +117,11 @@ exports.createListing = async (req, res) => {
     sizeGuide: sizeGuide || null,
   });
 
-  // Trigger price alerts for matching buyers (US-13)
   if (status === "active") triggerPriceAlerts(listing);
 
   res.status(201).json({ success: true, listing });
 };
 
-// PATCH /api/listings/:id
 exports.updateListing = async (req, res) => {
   const listing = await Listing.findOne({ _id: req.params.id, seller: req.user._id });
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found or access denied." });
@@ -147,7 +136,6 @@ exports.updateListing = async (req, res) => {
   res.json({ success: true, listing });
 };
 
-// PATCH /api/listings/:id/status  (US-10, US-49, US-50)
 exports.updateStatus = async (req, res) => {
   const { status } = req.body;
   const valid = ["active", "reserved", "inactive", "sold", "draft"];
@@ -163,14 +151,12 @@ exports.updateStatus = async (req, res) => {
   res.json({ success: true, listing });
 };
 
-// DELETE /api/listings/:id
 exports.deleteListing = async (req, res) => {
   const listing = await Listing.findOneAndDelete({ _id: req.params.id, seller: req.user._id });
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found." });
   res.json({ success: true, message: "Listing deleted." });
 };
 
-// POST /api/listings/:id/duplicate  (US-11)
 exports.duplicateListing = async (req, res) => {
   const original = await Listing.findOne({ _id: req.params.id, seller: req.user._id });
   if (!original) return res.status(404).json({ success: false, message: "Listing not found." });
@@ -188,21 +174,18 @@ exports.duplicateListing = async (req, res) => {
   res.status(201).json({ success: true, listing: duplicate });
 };
 
-// GET /api/listings/:id/price-history (US-14)
 exports.getPriceHistory = async (req, res) => {
   const listing = await Listing.findById(req.params.id).select("priceHistory title price");
   if (!listing) return res.status(404).json({ success: false, message: "Listing not found." });
   res.json({ success: true, priceHistory: listing.priceHistory });
 };
 
-// GET /api/listings/seller/:sellerId  – seller's active listings
 exports.getSellerListings = async (req, res) => {
   const listings = await Listing.find({ seller: req.params.sellerId, status: "active" })
     .sort({ createdAt: -1 });
   res.json({ success: true, listings });
 };
 
-// Internal: fire price alerts when a new listing is posted
 async function triggerPriceAlerts(listing) {
   try {
     const alerts = await PriceAlert.find({

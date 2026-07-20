@@ -1,8 +1,7 @@
-const { Review } = require("../models/index");
-const Order = require("../models/Order");
-const User = require("../models/User");
+const { Review } = require("../model/index");
+const Order = require("../model/order");
+const User = require("../model/user");
 
-// POST /api/reviews
 exports.createReview = async (req, res) => {
   const { orderId, rating, styleRating, body, photoUrls } = req.body;
 
@@ -26,14 +25,12 @@ exports.createReview = async (req, res) => {
     verifiedPurchase: true,
   });
 
-  // Recalculate seller's trust score after new review
   await recalcSellerScore(order.seller);
 
   const populated = await Review.findById(review._id).populate("reviewer", "fullName avatarUrl");
   res.status(201).json({ success: true, review: populated });
 };
 
-// GET /api/reviews/seller/:sellerId
 exports.getSellerReviews = async (req, res) => {
   const reviews = await Review.find({ seller: req.params.sellerId, verifiedPurchase: true })
     .populate("reviewer", "fullName avatarUrl")

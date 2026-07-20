@@ -1,8 +1,8 @@
-const Order = require("../models/Order");
-const Listing = require("../models/Listing");
-const { Notification } = require("../models/index");
+const mongoose = require("mongoose");
+const Order = require("../model/order");
+const Listing = require("../model/listing");
+const { Notification, CartItem } = require("../model/index");
 
-// POST /api/orders
 exports.createOrder = async (req, res) => {
   const { listingId, deliveryMethod, deliveryAddress, meetupLocation, paymentMethod, quantity = 1 } = req.body;
 
@@ -19,7 +19,12 @@ exports.createOrder = async (req, res) => {
       message: `Minimum order quantity is ${listing.minOrderQty} units.`,
     });
 
-  // Calculate unit price (tiered pricing US-45)
+  if (quantity > (listing.stockQty || 1))
+    return res.status(400).json({
+      success: false,
+      message: `Only ${listing.stockQty || 1} left in stock.`,
+    });
+
   let unitPrice = listing.price;
   if (listing.tieredPricing?.length) {
     for (const tier of listing.tieredPricing) {
@@ -52,25 +57,21 @@ exports.createOrder = async (req, res) => {
     deliveryAddress: deliveryAddress || "",
     meetupLocation: meetupLocation || "",
     paymentMethod,
-    // Digital wallet payments (eSewa/Khalti) happen outside the app —
-    // the buyer scans the seller's QR and pays in their own wallet app.
-    // We have no way to verify that money actually moved, so the order
-    // starts "awaiting_confirmation" until the seller says they received
-    // it. COD has nothing to confirm upfront, so it just stays "pending".
     paymentStatus: paymentMethod === "cod" ? "pending" : "awaiting_confirmation",
     status: "confirmed",
     timeline: [{
       step: "Order placed",
-      note: paymentMethod === "cod"
+      buyerNote: paymentMethod === "cod"
         ? "Seller has been notified. Pay cash on delivery/meetup."
         : "Seller has been notified and asked to confirm your payment.",
+      sellerNote: paymentMethod === "cod"
+        ? `${req.user.fullName} placed an order and will pay cash on delivery/meetup.`
+        : `${req.user.fullName} placed an order and is waiting for you to confirm the payment.`,
     }],
   });
 
-  // Mark listing as sold
   await Listing.findByIdAndUpdate(listingId, { status: "sold" });
 
-  // Notify seller
   await Notification.create({
     user: listing.seller,
     type: "order_update",
@@ -87,7 +88,116 @@ exports.createOrder = async (req, res) => {
   res.status(201).json({ success: true, order: populated });
 };
 
-// GET /api/orders  – buyer's purchases
+exports.createBatchOrder = async (req, res) => {
+  const { items, deliveryMethod, deliveryAddress, meetupLocation, paymentMethod } = req.body;
+
+  if (!Array.isArray(items) || items.length === 0)
+    return res.status(400).json({ success: false, message: "No items to check out." });
+
+  const listingIds = items.map((i) => i.listingId);
+  const listings = await Listing.find({ _id: { $in: listingIds } });
+
+  if (listings.length !== listingIds.length)
+    return res.status(404).json({ success: false, message: "One or more listings are no longer available." });
+
+  const sellerId = String(listings[0].seller);
+  const sameSeller = listings.every((l) => String(l.seller) === sellerId);
+  if (!sameSeller)
+    return res.status(400).json({ success: false, message: "All items in a combined checkout must be from the same seller." });
+
+  if (sellerId === String(req.user._id))
+    return res.status(400).json({ success: false, message: "You cannot buy your own listing." });
+
+  for (const listing of listings) {
+    if (listing.status !== "active")
+      return res.status(400).json({ success: false, message: `"${listing.title}" is no longer available.` });
+  }
+
+  const byId = Object.fromEntries(listings.map((l) => [String(l._id), l]));
+
+    for (const { listingId, quantity = 1 } of items) {
+    const listing = byId[listingId];
+    if (quantity < (listing.minOrderQty || 1))
+      return res.status(400).json({ success: false, message: `Minimum order for "${listing.title}" is ${listing.minOrderQty} units.` });
+    if (quantity > (listing.stockQty || 1))
+      return res.status(400).json({ success: false, message: `Only ${listing.stockQty || 1} left in stock for "${listing.title}".` });
+  }
+
+  const batchId = new mongoose.Types.ObjectId().toString();
+  const createdOrders = [];
+  let batchTotal = 0;
+
+  for (const { listingId, quantity = 1 } of items) {
+    const listing = byId[listingId];
+
+    let unitPrice = listing.price;
+    if (listing.tieredPricing?.length) {
+      for (const tier of listing.tieredPricing) {
+        if (quantity >= tier.minQty && (!tier.maxQty || quantity <= tier.maxQty)) {
+          unitPrice = tier.price;
+          break;
+        }
+      }
+    }
+
+    const deliveryCharge = createdOrders.length === 0 && deliveryMethod === "delivery" ? 100 : 0;
+    const totalAmount = unitPrice * quantity + deliveryCharge;
+    batchTotal += totalAmount;
+
+    const order = await Order.create({
+      listing: listing._id,
+      buyer: req.user._id,
+      seller: listing.seller,
+      batchId,
+      listingSnapshot: {
+        title: listing.title,
+        price: listing.price,
+        condition: listing.condition,
+        category: listing.category,
+        imageUrls: listing.imageUrls,
+      },
+      quantity,
+      unitPrice,
+      deliveryCharge,
+      totalAmount,
+      deliveryMethod,
+      deliveryAddress: deliveryAddress || "",
+      meetupLocation: meetupLocation || "",
+      paymentMethod,
+      paymentStatus: paymentMethod === "cod" ? "pending" : "awaiting_confirmation",
+      status: "confirmed",
+      timeline: [{
+        step: "Order placed",
+        buyerNote: paymentMethod === "cod"
+          ? "Seller has been notified. Pay cash on delivery/meetup."
+          : "Seller has been notified and asked to confirm your payment.",
+        sellerNote: paymentMethod === "cod"
+          ? `${req.user.fullName} placed a combined order and will pay cash on delivery/meetup.`
+          : `${req.user.fullName} placed a combined order and is waiting for you to confirm the payment.`,
+      }],
+    });
+
+    await Listing.findByIdAndUpdate(listing._id, { status: "sold" });
+    await CartItem.deleteOne({ user: req.user._id, listing: listing._id });
+
+    createdOrders.push(order);
+  }
+
+  await Notification.create({
+    user: sellerId,
+    type: "order_update",
+    title: "New order received!",
+    body: `${req.user.fullName} placed a combined order for ${createdOrders.length} item(s) totalling Rs. ${batchTotal}.`,
+    meta: { batchId },
+  });
+
+  const populated = await Order.find({ batchId })
+    .populate("listing", "title imageUrls category condition")
+    .populate("buyer", "fullName email phone")
+    .populate("seller", "fullName email phone");
+
+  res.status(201).json({ success: true, batchId, totalAmount: batchTotal, orders: populated });
+};
 exports.getMyOrders = async (req, res) => {
   const orders = await Order.find({ buyer: req.user._id })
     .populate("listing", "title imageUrls category condition")
@@ -96,7 +206,6 @@ exports.getMyOrders = async (req, res) => {
   res.json({ success: true, orders });
 };
 
-// GET /api/orders/selling  – seller's incoming orders
 exports.getSellingOrders = async (req, res) => {
   const orders = await Order.find({ seller: req.user._id })
     .populate("listing", "title imageUrls")
@@ -105,7 +214,6 @@ exports.getSellingOrders = async (req, res) => {
   res.json({ success: true, orders });
 };
 
-// GET /api/orders/:id
 exports.getOrderById = async (req, res) => {
   const order = await Order.findOne({
     _id: req.params.id,
@@ -119,7 +227,6 @@ exports.getOrderById = async (req, res) => {
   res.json({ success: true, order });
 };
 
-// PATCH /api/orders/:id/status
 exports.updateOrderStatus = async (req, res) => {
   const { status, note } = req.body;
   const valid = ["confirmed", "shipped", "delivered", "cancelled"];
@@ -132,7 +239,28 @@ exports.updateOrderStatus = async (req, res) => {
   if (!order) return res.status(404).json({ success: false, message: "Order not found." });
 
   order.status = status;
-  order.timeline.push({ step: status.charAt(0).toUpperCase() + status.slice(1), note: note || "" });
+
+  let buyerNote = note || "";
+  let sellerNote = note || "";
+  if (status === "shipped") {
+    buyerNote  = "Seller marked your item as shipped.";
+    sellerNote = "You marked the item as shipped.";
+  } else if (status === "delivered") {
+    buyerNote  = "You confirmed you received the item.";
+    sellerNote = "Buyer confirmed they received the item.";
+  } else if (status === "cancelled") {
+    buyerNote  = note || "This order was cancelled.";
+    sellerNote = note || "This order was cancelled.";
+  } else if (status === "confirmed") {
+    buyerNote  = note || "Order confirmed.";
+    sellerNote = note || "Order confirmed.";
+  }
+
+  order.timeline.push({
+    step: status.charAt(0).toUpperCase() + status.slice(1),
+    buyerNote,
+    sellerNote,
+  });
   await order.save();
 
   const notifyId = String(req.user._id) === String(order.buyer) ? order.seller : order.buyer;
@@ -147,10 +275,6 @@ exports.updateOrderStatus = async (req, res) => {
   res.json({ success: true, order });
 };
 
-// PATCH /api/orders/:id/confirm-payment
-// Seller-only: confirms money from an eSewa/Khalti QR payment actually
-// arrived. This is what flips paymentStatus from "awaiting_confirmation"
-// to "paid" — the buyer tapping "I've paid" is not enough on its own.
 exports.confirmPayment = async (req, res) => {
   const order = await Order.findOne({ _id: req.params.id, seller: req.user._id });
   if (!order) return res.status(404).json({ success: false, message: "Order not found." });
@@ -162,7 +286,11 @@ exports.confirmPayment = async (req, res) => {
     return res.status(400).json({ success: false, message: "Payment was already confirmed." });
 
   order.paymentStatus = "paid";
-  order.timeline.push({ step: "Payment confirmed", note: "Seller confirmed the payment was received." });
+  order.timeline.push({
+    step: "Payment confirmed",
+    buyerNote: "Seller confirmed your payment was received.",
+    sellerNote: "You confirmed the payment was received.",
+  });
   await order.save();
 
   await Notification.create({
@@ -181,7 +309,6 @@ exports.confirmPayment = async (req, res) => {
   res.json({ success: true, order: populated });
 };
 
-// POST /api/orders/:id/dispute  (US-21)
 exports.raiseDispute = async (req, res) => {
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ success: false, message: "Reason required." });
@@ -196,7 +323,11 @@ exports.raiseDispute = async (req, res) => {
   order.disputeReason = reason;
   order.disputeStatus = "raised";
   order.status = "disputed";
-  order.timeline.push({ step: "Dispute raised", note: reason });
+  order.timeline.push({
+    step: "Dispute raised",
+    buyerNote: `You raised a dispute: "${reason}"`,
+    sellerNote: `Buyer raised a dispute: "${reason}"`,
+  });
   await order.save();
 
   await Notification.create({
