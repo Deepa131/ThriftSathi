@@ -27,7 +27,7 @@ const listingSchema = new mongoose.Schema(
       enum: ["Like New", "Good", "Fair"],
     },
     price: { type: Number, required: true, min: 1 },
-    originalPrice: { type: Number, default: null },    // US-02: retail price comparison
+    originalPrice: { type: Number, default: null },    
     brand: { type: String, default: "" },
     city: { type: String, required: true },
     status: {
@@ -35,29 +35,28 @@ const listingSchema = new mongoose.Schema(
       enum: ["active", "reserved", "inactive", "sold", "draft"],
       default: "active",
     },
-    openToOffers: { type: Boolean, default: false },   // US-15
-    meetupAvailable: { type: Boolean, default: true }, // US-31
+    openToOffers: { type: Boolean, default: false },   
+    meetupAvailable: { type: Boolean, default: true }, 
     imageUrls: { type: [String], default: [] },
-    viewCount: { type: Number, default: 0 },           // US-06
+    viewCount: { type: Number, default: 0 },           
     saveCount: { type: Number, default: 0 },
     shareCount: { type: Number, default: 0 },
-    chatInitiations: { type: Number, default: 0 },     // US-40
-    priceHistory: { type: [priceHistorySchema], default: [] }, // US-14
-    scheduledPublishAt: { type: Date, default: null }, // US-42
-    minOrderQty: { type: Number, default: 1 },         // US-48
-    tieredPricing: { type: [tieredPricingSchema], default: [] }, // US-45
-    sizeGuide: { type: mongoose.Schema.Types.Mixed, default: null }, // US-12
+    chatInitiations: { type: Number, default: 0 },     
+    priceHistory: { type: [priceHistorySchema], default: [] }, 
+    scheduledPublishAt: { type: Date, default: null }, 
+    minOrderQty: { type: Number, default: 1 },         
+    stockQty: { type: Number, default: 1, min: 1 },
+    tieredPricing: { type: [tieredPricingSchema], default: [] }, 
+    sizeGuide: { type: mongoose.Schema.Types.Mixed, default: null }, 
   },
   { timestamps: true }
 );
 
-// Text index for full-text search
 listingSchema.index({ title: "text", description: "text", brand: "text" });
 listingSchema.index({ category: 1, status: 1, createdAt: -1 });
 listingSchema.index({ seller: 1, status: 1 });
 listingSchema.index({ price: 1 });
 
-// Record price in history when price changes
 listingSchema.pre("save", function (next) {
   if (this.isModified("price")) {
     this.priceHistory.push({ price: this.price, changedAt: new Date() });
@@ -65,7 +64,6 @@ listingSchema.pre("save", function (next) {
   next();
 });
 
-// Virtual: savings percentage
 listingSchema.virtual("savingsPct").get(function () {
   if (!this.originalPrice || this.originalPrice <= this.price) return 0;
   return Math.round((1 - this.price / this.originalPrice) * 100);
