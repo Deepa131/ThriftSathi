@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { listingsAPI, usersAPI, reportsAPI, offersAPI, messagesAPI } from "../api/index";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 import { Badge } from "../components/common/Badge";
 import toast from "react-hot-toast";
 
@@ -11,13 +12,16 @@ export default function ListingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart, items: cartItems } = useCart();
   const qc = useQueryClient();
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const [reportOpen, setReportOpen]     = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [offerOpen, setOfferOpen]       = useState(false);
   const [offerAmount, setOfferAmount]   = useState("");
   const [activeImg, setActiveImg]       = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["listing", id],
@@ -61,6 +65,16 @@ export default function ListingDetailPage() {
     } catch (err) { toast.error(err.response?.data?.message || "Failed."); }
   };
 
+  const isOwnListing = user && seller && String(seller._id) === String(user._id);
+  const inCart = cartItems.some((ci) => ci.listing?._id === id);
+
+  const handleAddToCart = async () => {
+    if (!user) return navigate("/login");
+    setAddingToCart(true);
+    await addToCart(id, listing.minOrderQty || 1);
+    setAddingToCart(false);
+  };
+
   const handleMessage = async () => {
     if (!user) return navigate("/login");
     try {
@@ -91,10 +105,36 @@ export default function ListingDetailPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 40 }}>
         {/* Left: images */}
         <div>
-          <div style={{ background: "var(--bg)", borderRadius: "var(--radius-lg)", height: 340, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: 10 }}>
+          <div style={{ position: "relative", background: "var(--bg)", borderRadius: "var(--radius-lg)", height: 340, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", marginBottom: 10 }}>
             {listing.imageUrls?.[activeImg]
               ? <img src={listing.imageUrls[activeImg]} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               : <span style={{ fontSize: 72, opacity: 0.2 }}>📷</span>}
+            {/* Zoom icon — opens the full-size lightbox so buyers can actually
+                inspect condition/details instead of squinting at the thumbnail-
+                sized preview. Standard "expand" glyph (corner arrows), the same
+                icon used for fullscreen/zoom controls across most sites. */}
+            {listing.imageUrls?.[activeImg] && (
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label="View larger image"
+                title="View larger image"
+                style={{
+                  position: "absolute", bottom: 10, right: 10, width: 38, height: 38,
+                  borderRadius: 8, background: "#fff", color: "var(--text)",
+                  border: "1px solid var(--border)", cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+              </button>
+            )}
           </div>
           {listing.imageUrls?.length > 1 && (
             <div style={{ display: "flex", gap: 8 }}>
@@ -208,6 +248,17 @@ export default function ListingDetailPage() {
                 onClick={() => user ? navigate(`/checkout/${id}`) : navigate("/login")}>
                 Buy now – Rs. {listing.price?.toLocaleString()}
               </button>
+              {!isOwnListing && (
+                <button
+                  className="btn btn-outline btn-full"
+                  onClick={handleAddToCart}
+                  disabled={addingToCart}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  <span style={{ fontSize: 16 }}>🛒</span>
+                  {inCart ? "Add another to cart" : "Add to cart"}
+                </button>
+              )}
               <button className="btn btn-outline btn-full" onClick={handleMessage}>
                 Message seller
               </button>
@@ -220,6 +271,51 @@ export default function ListingDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Image lightbox */}
+      {lightboxOpen && listing.imageUrls?.[activeImg] && (
+        <div
+          className="modal-overlay"
+          onClick={() => setLightboxOpen(false)}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "90vw", maxHeight: "90vh" }}>
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(false)}
+              aria-label="Close"
+              style={{ position: "absolute", top: -14, right: -14, width: 32, height: 32, borderRadius: "50%", background: "#fff", border: "1px solid var(--border)", cursor: "pointer", fontSize: 14 }}
+            >
+              ✕
+            </button>
+            <img
+              src={listing.imageUrls[activeImg]}
+              alt=""
+              style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: 8, display: "block" }}
+            />
+            {listing.imageUrls.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setActiveImg((i) => (i - 1 + listing.imageUrls.length) % listing.imageUrls.length)}
+                  aria-label="Previous image"
+                  style={{ position: "absolute", top: "50%", left: 8, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", fontSize: 18 }}
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveImg((i) => (i + 1) % listing.imageUrls.length)}
+                  aria-label="Next image"
+                  style={{ position: "absolute", top: "50%", right: 8, transform: "translateY(-50%)", width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.55)", color: "#fff", border: "none", cursor: "pointer", fontSize: 18 }}
+                >
+                  ›
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Report modal */}
       {reportOpen && (

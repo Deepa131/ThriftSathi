@@ -304,7 +304,7 @@ export function RegisterPage() {
   };
 
   const fields = [
-    { key: "fullName", label: "Full name",    type: "text",     placeholder: "Deepa Paudel"        },
+    { key: "fullName", label: "Full name",    type: "text",     placeholder: "Enter your full name"        },
     { key: "email",    label: "Email",         type: "email",    placeholder: "example@gmail.com"   },
   ];
   const [showPassword, setShowPassword] = useState(false);

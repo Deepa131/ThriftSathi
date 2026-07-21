@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const { Conversation, Message } = require("../models/Message");
-const { Notification } = require("../models/index");
+const User = require("../model/user");
+const { Conversation, Message } = require("../model/message");
+const { Notification } = require("../model/index");
 
 function setupSocket(io) {
-  // Authenticate every socket connection with JWT
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
@@ -20,9 +19,8 @@ function setupSocket(io) {
 
   io.on("connection", (socket) => {
     const userId = String(socket.user._id);
-    socket.join(`user:${userId}`); // Personal room for push notifications
+    socket.join(`user:${userId}`); 
 
-    // Join a conversation room to receive messages in real time
     socket.on("join_conversation", async (conversationId) => {
       const convo = await Conversation.findOne({
         _id: conversationId,
@@ -35,7 +33,6 @@ function setupSocket(io) {
       socket.leave(`convo:${conversationId}`);
     });
 
-    // Real-time message send
     socket.on("send_message", async ({ conversationId, body, messageType = "text", structuredData }) => {
       try {
         const convo = await Conversation.findOne({
@@ -52,10 +49,6 @@ function setupSocket(io) {
           structuredData: structuredData || null,
         });
 
-        // Increment the recipient's unread counter so the navbar badge
-        // (and conversation list) reflect real unread messages instead
-        // of always showing 0 — these fields existed on the schema but
-        // were never actually being updated anywhere.
         const isBuyerSending = String(socket.user._id) === String(convo.buyer);
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: body.substring(0, 80),
@@ -68,10 +61,8 @@ function setupSocket(io) {
           sender: { _id: socket.user._id, fullName: socket.user.fullName, avatarUrl: socket.user.avatarUrl },
         };
 
-        // Broadcast to everyone in the conversation room
         io.to(`convo:${conversationId}`).emit("new_message", populated);
 
-        // Push notification to the recipient
         const recipientId = String(socket.user._id) === String(convo.buyer)
           ? String(convo.seller) : String(convo.buyer);
 
@@ -94,7 +85,6 @@ function setupSocket(io) {
       }
     });
 
-    // Typing indicators
     socket.on("typing", ({ conversationId }) => {
       socket.to(`convo:${conversationId}`).emit("user_typing", {
         userId, name: socket.user.fullName,

@@ -219,7 +219,7 @@ export default function BrowsePage() {
         <div style={{ marginBottom: 24 }}>
           <FilterRow
             type="checkbox"
-            label="Meetup only"
+            label="Meetup"
             checked={meetup}
             onChange={() => setMeetup(!meetup)}
           />

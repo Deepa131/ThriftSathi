@@ -9,10 +9,13 @@ import BrowsePage       from "./pages/BrowsePage";
 import ListingDetailPage from "./pages/ListingDetailPage";
 import CheckoutPage     from "./pages/CheckoutPage";
 import PaymentPage      from "./pages/PaymentPage";
+import MultiCheckoutPage from "./pages/MultiCheckoutPage";
+import MultiPaymentPage  from "./pages/MultiPaymentPage";
 import SellerProfilePage from "./pages/SellerProfilePage";
 import MessagesPage     from "./pages/MessagesPage";
 import OrderDetailPage  from "./pages/OrderDetailPage";
 import SellPage         from "./pages/SellPage";
+import CartPage         from "./pages/CartPage";
 import DashboardPage    from "./pages/DashboardPage";
 import { LoginPage, RegisterPage } from "./pages/AuthPages";
 
@@ -33,7 +36,10 @@ export default function App() {
         {/* Protected – must be logged in */}
         <Route path="/sell"           element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
         <Route path="/sell/edit/:id"  element={<ProtectedRoute><SellPage /></ProtectedRoute>} />
+        <Route path="/checkout/batch" element={<ProtectedRoute><MultiCheckoutPage /></ProtectedRoute>} />
         <Route path="/checkout/:id"   element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+        <Route path="/cart"           element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+        <Route path="/payment/batch"  element={<ProtectedRoute><MultiPaymentPage /></ProtectedRoute>} />
         <Route path="/payment/:id"    element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
         <Route path="/messages"       element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
         <Route path="/messages/:conversationId" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />

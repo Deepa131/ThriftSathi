@@ -62,14 +62,28 @@ export default function SellPage() {
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
+  // Each time the file picker is used this must ADD to what's already
+  // selected, not replace it — otherwise picking photos one at a time
+  // (rather than multi-selecting all 5 in one go) wipes out every
+  // previous pick and the seller ends up with only the last photo.
   const handleImages = (e) => {
-    const files = Array.from(e.target.files).slice(0, 5 - existingImageUrls.length);
-    setImageFiles(files);
-    setImagePreviews(files.map((f) => URL.createObjectURL(f)));
+    const selected = Array.from(e.target.files);
+    const remainingSlots = 5 - existingImageUrls.length - imageFiles.length;
+    const filesToAdd = selected.slice(0, Math.max(0, remainingSlots));
+    setImageFiles((prev) => [...prev, ...filesToAdd]);
+    setImagePreviews((prev) => [...prev, ...filesToAdd.map((f) => URL.createObjectURL(f))]);
+    // Reset so selecting the exact same file again (e.g. after removing it)
+    // still fires onChange — browsers skip the event if the value looks unchanged.
+    e.target.value = "";
   };
 
   const removeExistingImage = (i) => {
     setExistingImageUrls((prev) => prev.filter((_, idx) => idx !== i));
+  };
+
+  const removeNewImage = (i) => {
+    setImageFiles((prev) => prev.filter((_, idx) => idx !== i));
+    setImagePreviews((prev) => prev.filter((_, idx) => idx !== i));
   };
 
   const handleSubmit = async (e) => {
@@ -171,6 +185,10 @@ export default function SellPage() {
               <div key={"new-" + i} style={{ width: 80, height: 80, borderRadius: 8, overflow: "hidden", border: "1px solid var(--border)", position: "relative" }}>
                 <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 {existingImageUrls.length === 0 && i === 0 && <span style={{ position: "absolute", bottom: 2, left: 2, background: "var(--green)", color: "#fff", fontSize: "0.6rem", fontWeight: 700, padding: "1px 5px", borderRadius: 4 }}>Cover</span>}
+                <button type="button" onClick={() => removeNewImage(i)}
+                  style={{ position: "absolute", top: 2, right: 2, width: 18, height: 18, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "#fff", border: "none", fontSize: 11, cursor: "pointer", lineHeight: "18px" }}>
+                  ✕
+                </button>
               </div>
             ))}
             {totalPhotoCount < 5 && (

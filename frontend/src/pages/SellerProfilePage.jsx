@@ -88,10 +88,12 @@ export default function SellerProfilePage() {
             {[
               ["Trust score",   seller.trustScore || 0],
               ["Listings",      listings?.length || 0],
+              ["Sold items",    soldListings?.length || 0],
+              ["Reviews",       reviewCount || reviews?.length || 0],
             ].map(([label, val]) => (
               <div key={label} style={{ background: "var(--bg)", borderRadius: 8, padding: "8px 6px", textAlign: "center" }}>
-                <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginBottom: 2 }}>{label}</p>
-                <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--green)" }}>{val}</p>
+                <p style={{ fontSize: "0.76rem", color: "var(--text-muted)", marginBottom: 3, fontWeight: 600 }}>{label}</p>
+                <p style={{ fontWeight: 800, fontSize: "1.12rem", color: "var(--green)", lineHeight: 1.1 }}>{val}</p>
               </div>
             ))}
           </div>

@@ -61,6 +61,7 @@ export const listingsAPI = {
 // ORDERS
 export const ordersAPI = {
   create:         (data)         => api.post("/orders", data),
+  createBatch:    (data)         => api.post("/orders/batch", data),
   getMyOrders:    ()             => api.get("/orders"),
   getSellingOrders: ()           => api.get("/orders/selling"),
   getById:        (id)           => api.get(`/orders/${id}`),
@@ -81,12 +82,22 @@ export const usersAPI = {
   toggleSave:       (listingId, collectionName) => api.post("/users/me/saved", { listingId, collectionName }),
   getNotifications: ()          => api.get("/users/me/notifications"),
   markAllRead:      ()          => api.patch("/users/me/notifications/read-all"),
+  markRead:         (id)        => api.patch(`/users/me/notifications/${id}/read`),
   createPriceAlert: (data)      => api.post("/users/me/price-alerts", data),
   getPriceAlerts:   ()          => api.get("/users/me/price-alerts"),
   getAnalytics:     (listingId) => api.get(`/users/me/analytics/${listingId}`),
   follow:           (id)        => api.post(`/users/${id}/follow`),
   block:            (id)        => api.post(`/users/${id}/block`),
   unblock:          (id)        => api.delete(`/users/${id}/block`),
+};
+
+// CART
+export const cartAPI = {
+  get:      ()                    => api.get("/users/me/cart"),
+  add:      (listingId, quantity) => api.post("/users/me/cart", { listingId, quantity }),
+  update:   (listingId, quantity) => api.patch(`/users/me/cart/${listingId}`, { quantity }),
+  remove:   (listingId)           => api.delete(`/users/me/cart/${listingId}`),
+  clear:    ()                    => api.delete("/users/me/cart"),
 };
 
 // MESSAGES

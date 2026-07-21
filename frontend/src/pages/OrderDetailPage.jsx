@@ -80,6 +80,13 @@ export default function OrderDetailPage() {
   ];
   const currentStep = STEPS.findIndex((s) => s.key === order.status);
 
+  // Buyer and seller are on opposite sides of the same event, so each
+  // timeline entry carries a buyerNote and a sellerNote from the API.
+  // Older orders created before this change only have the single
+  // generic "note" field, so that's kept as a fallback.
+  const timelineNoteFor = (step) =>
+    (isSeller ? step.sellerNote : step.buyerNote) || step.note || "";
+
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "28px 1.5rem" }}>
 
@@ -192,7 +199,11 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Order timeline (US-21) */}
+        {/* Order timeline (US-21) — note text is role-aware: the buyer
+            and seller each see the event described from their own point
+            of view instead of one shared sentence written for only one
+            side (e.g. a seller viewing their own order previously saw
+            "Seller has been notified.", which reads wrong from their side). */}
         <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
           <h3 style={{ marginBottom: 16 }}>Order timeline</h3>
           {order.timeline?.map((step, i) => (
@@ -200,7 +211,7 @@ export default function OrderDetailPage() {
               <div style={{ width: 14, height: 14, borderRadius: "50%", background: "var(--green)", flexShrink: 0, marginTop: 3 }} />
               <div>
                 <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>{step.step}</p>
-                {step.note && <p className="text-muted text-sm">{step.note}</p>}
+                {timelineNoteFor(step) && <p className="text-muted text-sm">{timelineNoteFor(step)}</p>}
                 <p style={{ fontSize: "0.74rem", color: "var(--text-light)" }}>{new Date(step.occurredAt).toLocaleString()}</p>
               </div>
             </div>
