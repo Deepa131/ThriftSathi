@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const User = require("../model/user");
 
-// Protects routes — user must be logged in
 const protect = async (req, res, next) => {
   let token;
   if (req.headers.authorization?.startsWith("Bearer ")) {
@@ -22,7 +21,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Optionally attach user if token present — does not block
 const optionalAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
