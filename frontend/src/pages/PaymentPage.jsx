@@ -22,11 +22,6 @@ export default function PaymentPage() {
 
   const total = state?.totalAmount || 0;
 
-  // Distinct query key from ["listing", id] (ListingDetailPage) and
-  // ["checkout-listing", id] (CheckoutPage) — each of those caches a
-  // different shape under its own key, so this one needs its own to
-  // avoid the same stale-cache bug that broke Checkout earlier. We only
-  // need the seller's QR codes here.
   const { data: listing } = useQuery({
     queryKey: ["payment-listing", id],
     queryFn:  () => listingsAPI.getById(id).then(r => r.data.listing),
@@ -36,8 +31,6 @@ export default function PaymentPage() {
   const qrUrl = isDigitalWallet ? listing?.seller?.paymentQR?.[method] : null;
 
   const handlePay = async () => {
-    // Digital wallets need a seller QR to scan — without one there's
-    // nothing for the buyer to actually pay against.
     if (isDigitalWallet && !qrUrl) {
       toast.error(`The seller hasn't set up a ${method === "esewa" ? "eSewa" : "Khalti"} QR code yet. Try another payment method or message them first.`);
       return;
@@ -61,12 +54,6 @@ export default function PaymentPage() {
   };
 
   if (success) {
-    // Three distinct outcomes, not one generic "success":
-    //  - COD: nothing to confirm, item just gets paid for at handoff.
-    //  - Digital wallet: buyer says they paid, but the seller hasn't
-    //    confirmed the money actually arrived yet. This used to say
-    //    "Payment received" immediately, which wasn't true — the seller
-    //    has to confirm it from their side first.
     const isCod = method === "cod";
     return (
       <div style={{ maxWidth: 480, margin: "80px auto", textAlign: "center", padding: "0 1.5rem" }}>
@@ -104,9 +91,6 @@ export default function PaymentPage() {
         </label>
       ))}
 
-      {/* QR panel — only for eSewa/Khalti, once the listing (and its
-          seller's QR) has loaded. This is the "how do I actually pay"
-          step that was previously entirely missing. */}
       {isDigitalWallet && (
         <div style={{
           border: "1.5px dashed var(--border)",
