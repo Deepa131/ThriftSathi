@@ -1,5 +1,3 @@
-// PATH: frontend/src/pages/MultiPaymentPage.jsx
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ordersAPI } from "../api/index";
