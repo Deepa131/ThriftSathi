@@ -109,10 +109,6 @@ export default function ListingDetailPage() {
             {listing.imageUrls?.[activeImg]
               ? <img src={listing.imageUrls[activeImg]} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
               : <span style={{ fontSize: 72, opacity: 0.2 }}>📷</span>}
-            {/* Zoom icon — opens the full-size lightbox so buyers can actually
-                inspect condition/details instead of squinting at the thumbnail-
-                sized preview. Standard "expand" glyph (corner arrows), the same
-                icon used for fullscreen/zoom controls across most sites. */}
             {listing.imageUrls?.[activeImg] && (
               <button
                 type="button"
@@ -154,7 +150,7 @@ export default function ListingDetailPage() {
             </div>
           </div>
 
-          {/* Price history chart (US-14) */}
+          {/* Price history chart */}
           {histData?.length > 1 && (
             <div style={{ marginTop: 20, padding: 16, background: "var(--bg)", borderRadius: "var(--radius-lg)" }}>
               <h3 style={{ marginBottom: 12 }}>Price history</h3>
@@ -179,7 +175,7 @@ export default function ListingDetailPage() {
             {listing.status === "reserved" && <span className="badge badge-reserved">Reserved</span>}
           </div>
 
-          {/* Price block (US-02) */}
+          {/* Price block */}
           <div style={{ marginBottom: 18 }}>
             <p style={{ fontSize: "2rem", fontWeight: 800 }}>Rs. {listing.price?.toLocaleString()}</p>
             {listing.originalPrice && (
@@ -196,7 +192,7 @@ export default function ListingDetailPage() {
             )}
           </div>
 
-          {/* Seller card (US-03) */}
+          {/* Seller card */}
           {seller && (
             <div style={{ background: "var(--bg)", borderRadius: "var(--radius-lg)", padding: 14, marginBottom: 16 }}>
               <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10 }}>
