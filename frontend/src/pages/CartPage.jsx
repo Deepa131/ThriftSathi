@@ -1,5 +1,3 @@
-// PATH: frontend/src/pages/CartPage.jsx
-
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
@@ -24,15 +22,8 @@ export default function CartPage() {
     );
   }
 
-  // Items that no longer have a listing at all (deleted) can't be grouped
-  // by seller, so they get their own bucket and are rendered plainly.
   const unavailableNoListing = items.filter((it) => !it.listing);
 
-  // Group everything else by seller. A seller's _id is assigned once at
-  // signup and never changes or collides — registration already blocks
-  // duplicate emails/phones — so grouping on listing.seller._id is a
-  // reliable way to know two listings really are from the same account,
-  // without needing to separately compare email or phone here.
   const groups = new Map();
   for (const it of items) {
     if (!it.listing) continue;
@@ -48,8 +39,6 @@ export default function CartPage() {
     if (availableItems.length === 0) return;
 
     if (availableItems.length === 1) {
-      // Only one item from this seller — the existing single-item
-      // checkout flow already handles this, no need for the batch path.
       navigate(`/checkout/${availableItems[0].listing._id}`);
       return;
     }
@@ -144,12 +133,6 @@ export default function CartPage() {
                         )}
                       </div>
 
-                      {/* Quantity — most listings here are one-off secondhand
-                          items with exactly 1 unit, so there's nothing to
-                          step through. The stepper only appears once the
-                          seller has actually listed more than 1 in stock,
-                          and "+" stays capped at that real stock number so
-                          a buyer can never request more than the seller has. */}
                       {isAvailable && (
                         stockQty > 1 ? (
                           <div style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #E2E0D8", borderRadius: 10, padding: "4px 8px" }}>
@@ -187,10 +170,6 @@ export default function CartPage() {
                 })}
               </div>
 
-              {/* One checkout action per seller — if there's more than one
-                  available item from this seller it pays for all of them
-                  together instead of making the buyer check out each one
-                  separately. */}
               {availableCount > 0 && (
                 <div style={{ padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FAFAF7" }}>
                   <span style={{ fontSize: "0.85rem", color: "#6B6B67" }}>
@@ -208,7 +187,6 @@ export default function CartPage() {
           );
         })}
 
-        {/* Deleted listings with no seller to group under */}
         {unavailableNoListing.map(({ _id }) => (
           <div key={_id} style={{ background: "#fff", border: "1px solid #E2E0D8", borderRadius: 14, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", opacity: 0.6 }}>
             <p style={{ fontWeight: 700, fontSize: "0.9rem" }}>This listing is no longer available</p>
