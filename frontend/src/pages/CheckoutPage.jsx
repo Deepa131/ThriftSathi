@@ -1,5 +1,3 @@
-// PATH: frontend/src/pages/CheckoutPage.jsx
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -16,17 +14,11 @@ export default function CheckoutPage() {
   const [address,        setAddress]  = useState("");
   const [meetupLoc,      setMeetup]   = useState("");
 
-  // NOTE: This must use a query key distinct from ["listing", id], which
-  // ListingDetailPage.jsx uses to cache the FULL response ({ success, listing, isSaved }).
-  // Sharing the same key caused React Query to serve that wrapper object here
-  // instead of the unwrapped listing, making listing.price undefined and
-  // incorrectly showing "This listing is missing pricing information."
   const { data: listing, isLoading } = useQuery({
     queryKey: ["checkout-listing", id],
     queryFn:  () => listingsAPI.getById(id).then(r => r.data.listing),
   });
 
-  // Fix NaN: make sure price is a number before calculating
   const itemPrice   = Number(listing?.price) || 0;
   const charge      = deliveryMethod === "delivery" ? DELIVERY_CHARGE : 0;
   const totalAmount = itemPrice + charge;
@@ -63,11 +55,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Guard against incomplete listing data (e.g. a listing created before
-  // price validation existed, or with a missing seller). Rather than
-  // silently rendering "Rs. 0" and letting checkout proceed, surface it
-  // clearly — this is a data problem with the specific listing, not
-  // something the buyer can fix.
   if (!listing.price || listing.price <= 0) {
     return (
       <div style={{ padding: 60, textAlign: "center", color: "#6B6B67", maxWidth: 480, margin: "0 auto" }}>
@@ -82,7 +69,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // ── Shared style for delivery option card ─────────────────
   const optionCard = (isSelected) => ({
     display: "flex",
     alignItems: "center",
@@ -132,7 +118,6 @@ export default function CheckoutPage() {
         alignItems: "flex-start",
       }}>
 
-        {/* ══ LEFT: Item + Delivery ══════════════════════════ */}
         <div>
 
           {/* Item card */}
@@ -190,11 +175,6 @@ export default function CheckoutPage() {
           {/* Delivery method heading */}
           <h3 style={{ fontWeight: 700, marginBottom: 14 }}>Delivery method</h3>
 
-          {/* ── Delivery option ──────────────────────────────
-              NOTE: label wraps ALL content so clicking anywhere
-              on the card selects it. This fixes the broken
-              layout from before.
-          ─────────────────────────────────────────────────── */}
           <label style={optionCard(deliveryMethod === "delivery")}>
             <input
               type="radio"
@@ -221,7 +201,6 @@ export default function CheckoutPage() {
             </div>
           </label>
 
-          {/* ── Meetup option ─────────────────────────────── */}
           <label style={optionCard(deliveryMethod === "meetup")}>
             <input
               type="radio"
@@ -306,7 +285,6 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        {/* ══ RIGHT: Order summary ═══════════════════════════ */}
         <div>
           <div style={{
             background: "#fff",
