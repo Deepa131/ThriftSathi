@@ -11,7 +11,6 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(true);
 
-  // Re-validate token on app start
   useEffect(() => {
     const token = localStorage.getItem("ts_token");
     if (!token) { setLoading(false); return; }
