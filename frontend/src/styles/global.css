@@ -49,15 +49,12 @@ a  { color: var(--green); text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 
-/* ── Page wrapper ───────────────────────────────────────────── */
 .page-content, .page-padding {
   max-width: 1100px;
   margin: 0 auto;
   padding: 28px 1.5rem;
 }
 
-/* ── Form elements (this was completely missing — root cause of
-   tiny inputs, floating labels, and default-blue buttons) ────── */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -135,7 +132,6 @@ label:has(> input[type="radio"]) {
   font-size: 0.9rem;
 }
 
-/* ── Buttons ────────────────────────────────────────────────── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -177,7 +173,6 @@ label:has(> input[type="radio"]) {
 .btn-lg { padding: 13px 20px; font-size: 1rem; }
 .btn-full { width: 100%; }
 
-/* ── Badges ─────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
   font-size: 0.72rem;
@@ -201,14 +196,12 @@ label:has(> input[type="radio"]) {
 .badge-disputed   { background: #FEECEC; color: var(--danger); }
 .badge-cancelled  { background: #F0F0F0; color: #666; }
 
-/* ── Listing grid ───────────────────────────────────────────── */
 .listing-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: 16px;
 }
 
-/* ── Skeleton loader ────────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(90deg, #e4e2dc 25%, #edeae4 50%, #e4e2dc 75%);
   background-size: 200% 100%;
@@ -220,7 +213,6 @@ label:has(> input[type="radio"]) {
   100% { background-position: -200% 0; }
 }
 
-/* ── Modal ──────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -261,14 +253,11 @@ label:has(> input[type="radio"]) {
 }
 .modal-close:hover { background: var(--bg); }
 
-/* ── Scrollbar ──────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 3px; }
 
-/* ── Spin ───────────────────────────────────────────────────── */
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Utility ────────────────────────────────────────────────── */
 .text-muted  { color: var(--muted); }
 .text-green  { color: var(--green); }
 .text-danger { color: var(--danger); }
@@ -282,7 +271,6 @@ label:has(> input[type="radio"]) {
 .mb-16 { margin-bottom: 16px; }
 .mb-24 { margin-bottom: 24px; }
 
-/* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 768px) {
   h1 { font-size: 1.5rem; }
   .listing-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); }
