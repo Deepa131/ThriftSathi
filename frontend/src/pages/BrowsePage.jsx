@@ -9,7 +9,6 @@ const CATEGORIES = ["Electronics", "Fashion", "Bikes and parts", "Home and livin
 const CITIES     = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan"];
 const CONDITIONS = ["Like New", "Good", "Fair"];
 
-// Small reusable checkbox / radio row 
 function FilterRow({ type, name, label, checked, onChange }) {
   return (
     <label style={{
@@ -39,7 +38,6 @@ function FilterRow({ type, name, label, checked, onChange }) {
   );
 }
 
-// Section heading in sidebar 
 function FilterHeading({ children }) {
   return (
     <p style={{
@@ -72,7 +70,6 @@ export default function BrowsePage() {
   const [compareIds, setCompare]= useState([]);
   const [showCompare, setShowC] = useState(false);
 
-  // Sync filters → URL
   useEffect(() => {
     const p = {};
     if (q)        p.q = q;
@@ -124,7 +121,6 @@ export default function BrowsePage() {
       <aside style={{ width: 220, flexShrink: 0 }}>
         <h3 style={{ fontWeight: 800, fontSize: "1rem", marginBottom: 24 }}>Filters</h3>
 
-        {/* Condition */}
         <div style={{ marginBottom: 24 }}>
           <FilterHeading>Condition</FilterHeading>
           {CONDITIONS.map(c => (
@@ -138,7 +134,6 @@ export default function BrowsePage() {
           ))}
         </div>
 
-        {/* Category */}
         <div style={{ marginBottom: 24 }}>
           <FilterHeading>Category</FilterHeading>
           {["", ...CATEGORIES].map(c => (
@@ -153,7 +148,6 @@ export default function BrowsePage() {
           ))}
         </div>
 
-        {/* Price range */}
         <div style={{ marginBottom: 24 }}>
           <FilterHeading>Price range</FilterHeading>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -189,7 +183,6 @@ export default function BrowsePage() {
           </div>
         </div>
 
-        {/* Location */}
         <div style={{ marginBottom: 20 }}>
           <FilterHeading>Location</FilterHeading>
           <select
@@ -215,7 +208,6 @@ export default function BrowsePage() {
           </select>
         </div>
 
-        {/* Toggles */}
         <div style={{ marginBottom: 24 }}>
           <FilterRow
             type="checkbox"
@@ -231,7 +223,6 @@ export default function BrowsePage() {
           />
         </div>
 
-        {/* Clear button */}
         <button
           onClick={clearAll}
           style={{
@@ -253,7 +244,6 @@ export default function BrowsePage() {
 
       <div style={{ flex: 1, minWidth: 0 }}>
 
-        {/* Search + sort bar */}
         <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
           <input
             value={q}
@@ -293,13 +283,11 @@ export default function BrowsePage() {
           </select>
         </div>
 
-        {/* Results count */}
         <p style={{ fontSize: "0.82rem", color: "#6B6B67", marginBottom: 16 }}>
           {data?.total ?? 0} results{category ? " in " + category : " for all categories"}
           {city ? " in " + city : ""}
         </p>
 
-        {/* Grid */}
         {isLoading ? (
           <div className="listing-grid">
             {[1,2,3,4,5,6].map(i => (
@@ -333,7 +321,6 @@ export default function BrowsePage() {
           </div>
         )}
 
-        {/* Pagination */}
         {data?.pages > 1 && (
           <div style={{
             display: "flex",
@@ -365,7 +352,6 @@ export default function BrowsePage() {
         )}
       </div>
 
-      {/* Compare sticky bar */}
       {compareIds.length >= 2 && (
         <div style={{
           position: "fixed",
