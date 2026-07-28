@@ -1,5 +1,3 @@
-// Save this file to: frontend/src/components/layout/Navbar.jsx
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -18,14 +16,6 @@ export default function Navbar() {
 
   const unreadNotifications = notifications.filter((n) => !n.isRead).length;
 
-  // The badge shows unseen CHAT MESSAGES only (not every notification type),
-  // so it matches what the "Messages" button actually links to. It's driven
-  // by messagesAPI.getUnreadCount, which sums each conversation's
-  // unreadBuyer/unreadSeller counters. Those counters are reset to 0 on the
-  // backend the moment the user opens that conversation (see
-  // messageController.getMessages), so as soon as the user has actually
-  // seen the message the count drops on its own — it won't keep showing
-  // "3" forever like a message the user already read.
   useEffect(() => {
     if (!user) { setUnreadMessages(0); return; }
 
@@ -35,8 +25,8 @@ export default function Navbar() {
         .catch(() => {});
     };
 
-    fetchUnread(); // check right away (covers navigating away from /messages after reading)
-    const interval = setInterval(fetchUnread, 8000); // keep it fresh for new incoming messages
+    fetchUnread(); 
+    const interval = setInterval(fetchUnread, 8000); 
     return () => clearInterval(interval);
   }, [user, location.pathname]);
 
@@ -69,7 +59,6 @@ export default function Navbar() {
         await usersAPI.markRead(notification._id);
       }
     } catch {
-      // Even if the request fails, still remove locally to match click behavior.
     }
 
     setNotifications((prev) => prev.filter((n) => n._id !== notification._id));
@@ -105,7 +94,6 @@ export default function Navbar() {
         gap: 24,
       }}>
 
-        {/* ── Logo ──────────────────────────────────────────── */}
         <Link to="/" style={{
           display: "flex",
           alignItems: "center",
@@ -133,13 +121,11 @@ export default function Navbar() {
           }}>ThriftSathi</span>
         </Link>
 
-        {/* ── Centre nav links ──────────────────────────────── */}
         <div style={{ display: "flex", gap: 2, alignItems: "center" }}>
           <Link to="/browse" style={navLinkStyle}>Browse</Link>
           {user && <Link to="/sell" style={navLinkStyle}>Sell</Link>}
         </div>
 
-        {/* ── Right side ────────────────────────────────────── */}
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {user ? (
             <>
@@ -390,7 +376,6 @@ export default function Navbar() {
                 )}
               </div>
 
-              {/* Avatar + dropdown */}
               <div style={{ position: "relative" }}>
                 <div
                   onClick={() => {
@@ -420,12 +405,10 @@ export default function Navbar() {
 
                 {menuOpen && (
                   <>
-                    {/* Backdrop */}
                     <div
                       onClick={() => setMenuOpen(false)}
                       style={{ position: "fixed", inset: 0, zIndex: 149 }}
                     />
-                    {/* Dropdown panel */}
                     <div style={{
                       position: "absolute",
                       top: "calc(100% + 8px)",
@@ -438,7 +421,6 @@ export default function Navbar() {
                       zIndex: 150,
                       overflow: "hidden",
                     }}>
-                      {/* User info header */}
                       <div style={{
                         padding: "12px 16px",
                         borderBottom: "1px solid #E2E0D8",
@@ -447,7 +429,6 @@ export default function Navbar() {
                         <p style={{ fontSize: "0.76rem", color: "#6B6B67", marginTop: 2 }}>{user.email}</p>
                       </div>
 
-                      {/* Menu links */}
                       {[
                         { label: "Dashboard",     path: "/dashboard" },
                         { label: "Cart",          path: "/cart" },
@@ -473,7 +454,6 @@ export default function Navbar() {
                         </Link>
                       ))}
 
-                      {/* Logout */}
                       <button
                         onClick={() => { logout(); setMenuOpen(false); navigate("/"); }}
                         style={{
