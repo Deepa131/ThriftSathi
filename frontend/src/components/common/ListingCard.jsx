@@ -1,5 +1,3 @@
-// Save this file to: frontend/src/components/common/ListingCard.jsx
-
 import { useNavigate } from "react-router-dom";
 
 function Badge({ condition }) {
@@ -65,7 +63,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
         if (!isCompared) e.currentTarget.style.borderColor = "#E2E0D8";
       }}
     >
-      {/* Image area */}
       <div style={{
         position: "relative",
         background: "#F2F0EB",
@@ -88,7 +85,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
           </span>
         )}
 
-        {/* Savings badge top-left */}
         {savingsPct > 0 && (
           <div style={{
             position: "absolute",
@@ -105,7 +101,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
           </div>
         )}
 
-        {/* Reserved badge */}
         {listing.status === "reserved" && (
           <div style={{
             position: "absolute",
@@ -120,7 +115,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
           }}>RESERVED</div>
         )}
 
-        {/* Sold badge — shown on the seller's profile "Sold items" section */}
         {listing.status === "sold" && (
           <div style={{
             position: "absolute",
@@ -135,7 +129,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
           }}>SOLD</div>
         )}
 
-        {/* Compare checkbox */}
         {onCompareToggle && (
           <div
             onClick={e => { e.stopPropagation(); onCompareToggle(listing._id); }}
@@ -159,7 +152,6 @@ export default function ListingCard({ listing, onCompareToggle, isCompared }) {
         )}
       </div>
 
-      {/* Info area */}
       <div style={{ padding: "12px 14px 14px" }}>
         <p style={{
           fontWeight: 600,
