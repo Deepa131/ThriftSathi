@@ -27,7 +27,6 @@ export function CartProvider({ children }) {
       .finally(() => setLoading(false));
   }, [user]);
 
-  // Load the cart once a user is logged in; clear it locally on logout.
   useEffect(() => {
     if (user) refreshCart();
     else { setItems([]); setItemCount(0); setSubtotal(0); }
