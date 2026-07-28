@@ -17,25 +17,18 @@ const emptyForm = (user) => ({
 
 export default function SellPage() {
   const { user } = useAuth();
-  const { id }    = useParams();      // present only on /sell/edit/:id
+  const { id }    = useParams();     
   const isEdit    = !!id;
   const navigate  = useNavigate();
   const qc        = useQueryClient();
 
   const [form, setForm] = useState(emptyForm(user));
-  // Photos already saved on the listing (edit mode) — kept separately from
-  // newly-picked files so we don't force a reselect of all 5 photos just
-  // to fix a typo in the title.
   const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [imageFiles, setImageFiles]       = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading]         = useState(false);
   const [submitting, setSubmitting]       = useState(false);
 
-  // In edit mode, load the existing listing. The backend's updateListing
-  // (and this fetch) both scope to the logged-in seller, so someone can't
-  // edit a listing that isn't theirs — a 404 here means either the listing
-  // doesn't exist or it isn't yours.
   const { data: existingListing, isLoading: loadingListing, isError: loadError } = useQuery({
     queryKey: ["listing-edit", id],
     queryFn:  () => listingsAPI.getById(id).then((r) => r.data.listing),
@@ -61,19 +54,12 @@ export default function SellPage() {
   }, [existingListing, user]);
 
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
-
-  // Each time the file picker is used this must ADD to what's already
-  // selected, not replace it — otherwise picking photos one at a time
-  // (rather than multi-selecting all 5 in one go) wipes out every
-  // previous pick and the seller ends up with only the last photo.
   const handleImages = (e) => {
     const selected = Array.from(e.target.files);
     const remainingSlots = 5 - existingImageUrls.length - imageFiles.length;
     const filesToAdd = selected.slice(0, Math.max(0, remainingSlots));
     setImageFiles((prev) => [...prev, ...filesToAdd]);
     setImagePreviews((prev) => [...prev, ...filesToAdd.map((f) => URL.createObjectURL(f))]);
-    // Reset so selecting the exact same file again (e.g. after removing it)
-    // still fires onChange — browsers skip the event if the value looks unchanged.
     e.target.value = "";
   };
 
@@ -112,9 +98,6 @@ export default function SellPage() {
 
       if (isEdit) {
         await listingsAPI.update(id, payload);
-        // Invalidate the detail page's cache key (not our own edit-page
-        // key) so /listings/:id refetches fresh data instead of showing
-        // whatever was last cached there.
         qc.invalidateQueries(["listing", id]);
         qc.invalidateQueries(["listing-edit", id]);
         qc.invalidateQueries(["dashboard"]);
