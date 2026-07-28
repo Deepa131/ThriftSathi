@@ -11,15 +11,13 @@ router.get("/seller/:sellerId",        ctrl.getSellerListings);
 router.get("/:id",        optionalAuth, ctrl.getListingById);
 router.get("/:id/price-history",       ctrl.getPriceHistory);
 
-// Protected routes (must be logged in)
+// Protected routes
 router.post("/",          protect, ctrl.createListing);
 router.patch("/:id",      protect, ctrl.updateListing);
 router.patch("/:id/status", protect, ctrl.updateStatus);
 router.delete("/:id",     protect, ctrl.deleteListing);
 router.post("/:id/duplicate", protect, ctrl.duplicateListing);
 
-// Image upload — returns array of file URLs
-// US-07: up to 5 photos
 router.post("/upload-images", protect, upload.array("images", 5), (req, res) => {
   if (!req.files?.length)
     return res.status(400).json({ success: false, message: "No images uploaded." });
