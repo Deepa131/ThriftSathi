@@ -8,11 +8,6 @@ import toast from "react-hot-toast";
 
 const TABS = ["dashboard", "profile", "listings", "orders", "saved", "notifications", "reviews"];
 
-// Maps each tab to the route the navbar/links actually use, so visiting
-// /orders, /profile, /saved, /notifications, or /reviews directly opens
-// the right tab instead of always landing on "Dashboard" (which is what
-// was happening before — every one of those links rendered the same
-// component with the tab hardcoded to "dashboard").
 const PATH_TO_TAB = {
   "/dashboard": "dashboard",
   "/profile": "profile",
@@ -34,8 +29,6 @@ export default function DashboardPage() {
   const [tab, setTab] = useState(PATH_TO_TAB[location.pathname] || "dashboard");
   const [orderView, setOrderView] = useState("buying"); // "buying" | "selling"
 
-  // Keep the tab in sync if the URL changes from elsewhere (navbar links,
-  // browser back/forward, etc.)
   useEffect(() => {
     if (PATH_TO_TAB[location.pathname]) setTab(PATH_TO_TAB[location.pathname]);
   }, [location.pathname]);
@@ -101,7 +94,6 @@ export default function DashboardPage() {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 1.5rem", display: "flex", gap: 28, alignItems: "flex-start" }}>
 
-      {/* ── Sidebar nav ───────────────────────────────────────────────── */}
       <aside style={{ width: 200, flexShrink: 0, position: "sticky", top: 76 }}>
         <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-light)", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8, padding: "0 12px" }}>My account</p>
         {TABS.map((t) => (
@@ -138,7 +130,7 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {/* Accountability score (US-44) */}
+            {/* Accountability score */}
             <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
               <h3 style={{ marginBottom: 14 }}>Seller accountability score</h3>
               <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
@@ -150,7 +142,7 @@ export default function DashboardPage() {
                   <p className="text-muted text-sm" style={{ marginTop: 4 }}>Respond faster to buyers and complete orders on time to improve your score.</p>
                 </div>
               </div>
-              {/* Profile completeness (US-09) */}
+              {/* Profile completeness */}
               <div style={{ marginTop: 16 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
                   <p style={{ fontSize: "0.82rem", fontWeight: 600 }}>Profile completeness</p>
@@ -221,9 +213,6 @@ export default function DashboardPage() {
         {tab === "orders" && (
           <>
             <h1 style={{ marginBottom: 14 }}>Orders</h1>
-            {/* Buying vs Selling — these are two different things: orders
-                you placed as a buyer, vs orders other people placed on
-                your listings that you need to fulfill as a seller. */}
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <button
                 className={orderView === "buying" ? "btn btn-primary btn-sm" : "btn btn-ghost btn-sm"}
@@ -328,8 +317,6 @@ export default function DashboardPage() {
 function ProfileTab({ user }) {
   const { updateUser } = useAuth();
   const qc = useQueryClient();
-  // Phone is stored as "+977XXXXXXXXXX"; strip the prefix for editing
-  // and only the 10 local digits live in form state.
   const [form, setForm] = useState({
     fullName: user?.fullName || "",
     phone: (user?.phone || "").replace("+977", ""),
@@ -413,9 +400,6 @@ function ProfileTab({ user }) {
         <button className="btn btn-primary btn-full" onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save changes"}</button>
       </div>
 
-      {/* Payment QR codes — buyers see these on the payment page when
-          they pick eSewa/Khalti, so they have something real to scan
-          and pay instead of the app just declaring payment received. */}
       <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 24, maxWidth: 500, marginTop: 20 }}>
         <h3 style={{ marginBottom: 4 }}>Payment QR codes</h3>
         <p className="text-muted text-sm" style={{ marginBottom: 18 }}>
