@@ -80,20 +80,12 @@ export default function OrderDetailPage() {
   ];
   const currentStep = STEPS.findIndex((s) => s.key === order.status);
 
-  // Buyer and seller are on opposite sides of the same event, so each
-  // timeline entry carries a buyerNote and a sellerNote from the API.
-  // Older orders created before this change only have the single
-  // generic "note" field, so that's kept as a fallback.
   const timelineNoteFor = (step) =>
     (isSeller ? step.sellerNote : step.buyerNote) || step.note || "";
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto", padding: "28px 1.5rem" }}>
 
-      {/* Simple back link — this page previously had its own sidebar with
-          a different set of links/styling than the Dashboard's "Orders"
-          tab it's reached from, which was confusing since it looked like
-          a totally different section of the app. */}
       <button className="btn btn-ghost btn-sm" style={{ marginBottom: 20 }} onClick={() => navigate("/orders")}>
         ← Back to Orders
       </button>
@@ -128,23 +120,12 @@ export default function OrderDetailPage() {
             {isBuyer && order.status === "delivered" && (
               <button className="btn btn-primary btn-sm" onClick={() => setReviewOpen(true)}>Leave a review</button>
             )}
-            {/* This must fire on "shipped", not "confirmed" — the flow is
-                confirmed -> shipped -> delivered. "Confirm receipt" is the
-                buyer's acknowledgement that the shipped item arrived, which
-                is what moves status to "delivered" and unlocks reviews.
-                It was previously checking "confirmed", which is the status
-                right after checkout, before the seller ships anything — so
-                orders could never reach "delivered" and the review box
-                could never appear. */}
             {isBuyer && order.status === "shipped" && (
               <button className="btn btn-primary btn-sm" onClick={handleConfirmReceipt}>Confirm receipt</button>
             )}
             {isBuyer && ["confirmed", "shipped"].includes(order.status) && (
               <button className="btn btn-danger btn-sm" onClick={() => setDisputeOpen(true)}>Raise a dispute</button>
             )}
-            {/* Seller must actively confirm eSewa/Khalti money arrived —
-                the buyer tapping "I've paid" on the payment page only
-                notifies the seller, it doesn't mark the order paid. */}
             {isSeller && order.paymentMethod !== "cod" && order.paymentStatus === "awaiting_confirmation" && (
               <button className="btn btn-primary btn-sm" onClick={handleConfirmPayment}>Confirm payment received</button>
             )}
@@ -154,11 +135,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Delivery details & contact info — this data (delivery address /
-            meetup location, and the buyer's phone/city) was already being
-            saved on the order and returned by the API, but no page ever
-            displayed it. Without it the seller had everything except the
-            one thing they actually need to ship the item. */}
         <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 20, marginBottom: 20 }}>
           <h3 style={{ marginBottom: 14 }}>Delivery details</h3>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -176,8 +152,6 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
-          {/* The seller needs the buyer's contact info to actually deliver
-              the item; the buyer sees the seller's, for the same reason. */}
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
             <p className="text-muted text-sm" style={{ marginBottom: 8 }}>
               {isSeller ? "Buyer contact" : "Seller contact"}
@@ -199,11 +173,6 @@ export default function OrderDetailPage() {
           </div>
         </div>
 
-        {/* Order timeline (US-21) — note text is role-aware: the buyer
-            and seller each see the event described from their own point
-            of view instead of one shared sentence written for only one
-            side (e.g. a seller viewing their own order previously saw
-            "Seller has been notified.", which reads wrong from their side). */}
         <div style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 12, padding: 20 }}>
           <h3 style={{ marginBottom: 16 }}>Order timeline</h3>
           {order.timeline?.map((step, i) => (
