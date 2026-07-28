@@ -35,7 +35,6 @@ export default function HomePage() {
     navigate("/browse?" + params.toString());
   };
 
-  // ── Shared input/select style ──────────────────────────────
   const fieldStyle = {
     border: "none",
     outline: "none",
@@ -48,9 +47,6 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* ═══════════════════════════════════════════════════════
-          HERO SECTION
-          ═══════════════════════════════════════════════════════ */}
       <div style={{
         background: "linear-gradient(160deg, #E8F5EE 0%, #EDF7F2 40%, #F2F0EB 100%)",
         padding: "60px 1.5rem 52px",
@@ -92,11 +88,6 @@ export default function HomePage() {
           Find great deals on electronics, fashion, and more from verified sellers across Nepal.
         </p>
 
-        {/* ── Search bar ── matches prototype exactly ─────────
-            Single white card, search field top-full-width,
-            then city dropdown | categories dropdown | Search button
-            all on ONE row below.
-        ─────────────────────────────────────────────────────── */}
         <form onSubmit={handleSearch} style={{
           background: "#ffffff",
           borderRadius: 18,
@@ -187,9 +178,6 @@ export default function HomePage() {
         </form>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          CONTENT SECTION
-          ═══════════════════════════════════════════════════════ */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "44px 1.5rem" }}>
 
         {/* Recently listed */}
