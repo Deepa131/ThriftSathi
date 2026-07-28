@@ -1,25 +1,17 @@
 import axios from "axios";
 
-// Single axios instance — all requests go through this
 const api = axios.create({
   baseURL: "/api",
   timeout: 12000,
   headers: { "Content-Type": "application/json" },
 });
 
-// Attach JWT on every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("ts_token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Redirect to /login on 401 — but NOT when the 401 came from the login
-// or register call itself. Those are just "wrong email/password" and
-// must be handled by the calling page's catch block (which shows a
-// toast). Without this check, a failed login triggers a hard redirect
-// to /login before the error toast can ever render, making it look
-// like nothing happened.
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -33,14 +25,12 @@ api.interceptors.response.use(
   }
 );
 
-// AUTH
 export const authAPI = {
   register: (data)           => api.post("/auth/register", data),
   login:    (email, password) => api.post("/auth/login", { email, password }),
   me:       ()               => api.get("/auth/me"),
 };
 
-// LISTINGS
 export const listingsAPI = {
   getAll:        (params)    => api.get("/listings", { params }),
   getRecent:     (params)    => api.get("/listings/recent", { params }),
@@ -58,7 +48,6 @@ export const listingsAPI = {
   }),
 };
 
-// ORDERS
 export const ordersAPI = {
   create:         (data)         => api.post("/orders", data),
   createBatch:    (data)         => api.post("/orders/batch", data),
@@ -70,7 +59,6 @@ export const ordersAPI = {
   raiseDispute:   (id, reason)   => api.post(`/orders/${id}/dispute`, { reason }),
 };
 
-// USERS
 export const usersAPI = {
   getProfile:       (id)        => api.get(`/users/${id}`),
   updateProfile:    (data)      => api.patch("/users/me/profile", data),
@@ -91,7 +79,6 @@ export const usersAPI = {
   unblock:          (id)        => api.delete(`/users/${id}/block`),
 };
 
-// CART
 export const cartAPI = {
   get:      ()                    => api.get("/users/me/cart"),
   add:      (listingId, quantity) => api.post("/users/me/cart", { listingId, quantity }),
@@ -100,7 +87,6 @@ export const cartAPI = {
   clear:    ()                    => api.delete("/users/me/cart"),
 };
 
-// MESSAGES
 export const messagesAPI = {
   getConversations:  ()             => api.get("/messages/conversations"),
   startConversation: (listingId)    => api.post("/messages/conversations", { listingId }),
@@ -109,19 +95,16 @@ export const messagesAPI = {
   getUnreadCount:    ()             => api.get("/messages/unread-count"),
 };
 
-// REVIEWS
 export const reviewsAPI = {
   getSellerReviews: (sellerId) => api.get(`/reviews/seller/${sellerId}`),
   create:           (data)     => api.post("/reviews", data),
 };
 
-// REPORTS
 export const reportsAPI = {
   create:    (data) => api.post("/reports", data),
   getMyReports: ()  => api.get("/reports/mine"),
 };
 
-// OFFERS
 export const offersAPI = {
   create:    (listingId, amount)         => api.post("/offers", { listingId, amount }),
   respond:   (id, action, counterAmount) => api.patch(`/offers/${id}`, { action, counterAmount }),
