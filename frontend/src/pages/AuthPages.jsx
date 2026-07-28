@@ -22,7 +22,6 @@ function EyeOffIcon(props) {
 
 const CITIES = ["Kathmandu", "Lalitpur", "Bhaktapur", "Pokhara", "Chitwan", "Butwal"];
 
-// Shared styles  
 const pageWrap = {
   minHeight: "100vh",
   background: "#F2F0EB",
@@ -89,7 +88,6 @@ const submitBtn = {
   marginTop: 4,
 };
 
-// LOGIN PAGE
 export function LoginPage() {
   const { login }  = useAuth();
   const navigate   = useNavigate();
@@ -124,7 +122,6 @@ export function LoginPage() {
     <div style={pageWrap}>
       <div style={card}>
 
-        {/* Logo row */}
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -140,7 +137,6 @@ export function LoginPage() {
           </span>
         </div>
 
-        {/* Title */}
         <h1 style={{
           fontWeight: 800,
           fontSize: "1.6rem",
@@ -159,10 +155,8 @@ export function LoginPage() {
           Login to your ThriftSathi account
         </p>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
 
-          {/* Email */}
           <div style={{ marginBottom: 16 }}>
             <label style={fieldLabel}>Email</label>
             <input
@@ -180,7 +174,6 @@ export function LoginPage() {
             />
           </div>
 
-          {/* Password */}
           <div style={{ marginBottom: 8 }}>
             <label style={fieldLabel}>Password</label>
             <div style={{ position: "relative" }}>
@@ -213,7 +206,6 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Forgot password */}
           <div style={{ textAlign: "right", marginBottom: 24 }}>
             <span style={{
               fontSize: "0.84rem",
@@ -225,7 +217,6 @@ export function LoginPage() {
             </span>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -238,7 +229,6 @@ export function LoginPage() {
           </button>
         </form>
 
-        {/* Register link */}
         <p style={{
           textAlign: "center",
           marginTop: 24,
@@ -258,7 +248,6 @@ export function LoginPage() {
   );
 }
 
-// REGISTER PAGE
 export function RegisterPage() {
   const { register } = useAuth();
   const navigate     = useNavigate();
@@ -285,8 +274,6 @@ export function RegisterPage() {
       toast.error("Password must be at least 6 characters.");
       return;
     }
-    // 10 digits isn't enough on its own — a real Nepali mobile number
-    // must start with 96, 97, or 98.
     if (form.phone && !/^9[678]\d{8}$/.test(form.phone)) {
       toast.error("Enter a valid Nepali mobile number (starts with 98, 97, or 96, 10 digits total).");
       return;
@@ -313,7 +300,6 @@ export function RegisterPage() {
     <div style={pageWrap}>
       <div style={{ ...card, maxWidth: 480 }}>
 
-        {/* Title */}
         <h1 style={{
           fontWeight: 800,
           fontSize: "1.6rem",
@@ -332,10 +318,8 @@ export function RegisterPage() {
           Profile setup – name, phone
         </p>
 
-        {/* Form */}
         <form onSubmit={handleSubmit}>
 
-          {/* Text fields */}
           {fields.map(f => (
             <div key={f.key} style={{ marginBottom: 16 }}>
               <label style={fieldLabel}>{f.label}</label>
@@ -421,7 +405,6 @@ export function RegisterPage() {
             </div>
           </div>
 
-          {/* City */}
           <div style={{ marginBottom: 24 }}>
             <label style={fieldLabel}>City</label>
             <select
@@ -447,7 +430,6 @@ export function RegisterPage() {
             </select>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -460,7 +442,6 @@ export function RegisterPage() {
           </button>
         </form>
 
-        {/* Login link */}
         <p style={{
           textAlign: "center",
           marginTop: 24,
