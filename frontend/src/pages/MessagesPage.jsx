@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 let socket = null;
 
 export default function MessagesPage() {
-  const { conversationId } = useParams(); // optional – from URL
+  const { conversationId } = useParams(); 
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -44,11 +44,6 @@ export default function MessagesPage() {
     const token = localStorage.getItem("ts_token");
     if (!token) return;
 
-    // IMPORTANT: connect directly to the backend, not the Vite dev server.
-    // window.location.origin (http://localhost:5173) has no Socket.io
-    // endpoint — only /api and /uploads are proxied to the backend, so a
-    // real-time connection there silently fails and no message ever
-    // arrives, even though it looks "sent".
     const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
     socket = io(SOCKET_URL, { auth: { token }, transports: ["websocket"] });
 
