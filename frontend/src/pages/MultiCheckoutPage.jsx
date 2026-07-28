@@ -1,5 +1,3 @@
-// PATH: frontend/src/pages/MultiCheckoutPage.jsx
-
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -17,10 +15,6 @@ export default function MultiCheckoutPage() {
   const seller = state?.seller;
   const items  = state?.items || [];
 
-  // This page only makes sense arriving from the cart's "Checkout N items"
-  // button, which already guarantees every item is from the same seller.
-  // If someone lands here directly (e.g. a stale bookmark) there's no
-  // data to check out, so send them back rather than showing a broken page.
   if (!items.length) {
     return (
       <div style={{ padding: 60, textAlign: "center", color: "#6B6B67" }}>
@@ -32,8 +26,6 @@ export default function MultiCheckoutPage() {
   }
 
   const itemsTotal  = items.reduce((s, it) => s + it.lineTotal, 0);
-  // One delivery/meetup covers the whole batch — same seller, one trip —
-  // rather than charging delivery separately per item.
   const charge      = deliveryMethod === "delivery" ? DELIVERY_CHARGE : 0;
   const totalAmount = itemsTotal + charge;
 
